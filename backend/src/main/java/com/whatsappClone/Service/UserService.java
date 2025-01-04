@@ -15,4 +15,7 @@ public interface UserService {
     public User updateUser(Integer userId, UpdateUserRequest req) throws UserException;
 
     public List<User> searchUser(String query);
+
+    public User toggleUserStatus(Integer userId) throws UserException;
+
 }

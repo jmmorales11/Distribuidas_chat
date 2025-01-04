@@ -15,6 +15,9 @@ const ChatList = ({
         auth.searchUser?.map((item, index) => (
           <div key={index} onClick={() => handleClickOnChatCard(item.id)}>
             <hr />
+            {console.log("item:", item)}
+            {console.log("Status value 1:", item.status)}
+            
             <ChatCard
               name={item.name}
               userImg={
@@ -23,35 +26,40 @@ const ChatList = ({
               }
               lastMessage={{
                 content:
-                  lastMessages[item.id]?.content || "Start your conversation",
+                  lastMessages[item.id]?.content || "Iniciar la conversación ",
                 timestamp: lastMessages[item.id]?.timestamp || "",
               }}
+              status={item.status}
             />
           </div>
         ))}
-      {chat?.chats?.length > 0 &&
-        !querys &&
-        chat?.chats?.map((item, index) => (
-          <div key={index} onClick={() => {
-            handleCurrentChat(item)
-            console.log("the item is ",item)
-          }}>
-            <hr />
-            <ChatCard
-              isChat={!item.group}
-              name={item.group ? item.chatName : auth.reqUser?.id !== item.users[0]?.id ? item.users[0]?.name : item.users[1]?.name}
-              userImg={
-                item.chatImage ||
-                "https://media.istockphoto.com/id/1455296779/photo/smiling-businesspeople-standing-arm-in-arm-in-an-office-hall.webp?b=1&s=170667a&w=0&k=20&c=0bdu3-mVcOw6FN_vIkwTx4pCE6jgL7Jy29bBWZhoiik="
-              }
-              lastMessage={{
-                content:
-                  lastMessages[item.id]?.content || "Start your conversation",
-                timestamp: lastMessages[item.id]?.timestamp || "",
-              }}
-            />
-          </div>
-        ))}
+
+      {chat?.chats?.length > 0 && !querys && chat?.chats?.map((item, index) => (
+        <div key={index} onClick={() => { handleCurrentChat(item); console.log("the item is ", item) }}>
+          <hr />
+
+
+          <ChatCard
+            isChat={!item.group}
+            name={item.group
+              ? item.chatName
+              : auth.reqUser?.id !== item.users[0]?.id
+              ? item.users[0]?.name
+              : item.users[1]?.name}
+            userImg={
+              item.chatImage ||
+              "https://media.istockphoto.com/id/1455296779/photo/smiling-businesspeople-standing-arm-in-arm-in-an-office-hall.webp?b=1&s=170667a&w=0&k=20&c=0bdu3-mVcOw6FN_vIkwTx4pCE6jgL7Jy29bBWZhoiik="
+            }
+            lastMessage={{
+              content:
+                lastMessages[item.id]?.content || "Inicar la conversación",
+              timestamp: lastMessages[item.id]?.timestamp || "",
+            }}
+            // Seleccionamos el estado del usuario que no es el actual
+            status={item.users.find(user => user.id !== auth.reqUser?.id)?.status}
+          />
+        </div>
+      ))}
     </div>
   );
 };

@@ -120,3 +120,45 @@ export const logoutAction = () => async (dispatch) => {
   dispatch({ type: LOGOUT, payload: null });
   dispatch({ type: REQ_USER, payload: null });
 };
+
+//desactivar 
+// Action creator for deactivating the user status
+export const deactivateUserStatus = (userId, token) => async (dispatch) => {
+  try {
+    const res = await fetch(`${BASE_API_URL}/api/users/status-deactivate/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    const resData = await res.json();
+
+    console.log("deactivated user status", resData);
+    dispatch({ type: UPDATE_USER, payload: resData }); // Puedes utilizar el tipo de acción que necesites
+  } catch (error) {
+    console.log("catch error", error);
+  }
+};
+
+//activar
+// Action creator for activating the user status
+export const activateUserStatus = (userId, token) => async (dispatch) => {
+  try {
+    const res = await fetch(`${BASE_API_URL}/api/users/status-activate/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const resData = await res.json();
+
+    console.log("activated user status", resData);
+    dispatch({ type: UPDATE_USER, payload: resData }); // Actualiza el estado con la nueva información del usuario
+  } catch (error) {
+    console.log("catch error", error);
+  }
+};

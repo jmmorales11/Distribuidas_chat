@@ -54,5 +54,37 @@ public class UserController {
 
         return new ResponseEntity<ApiResponse>(response, HttpStatus.ACCEPTED);
     }
+    //Cambiar el estado a desconectado
+    @PutMapping("/status-activate/{userId}")
+    public ResponseEntity<ApiResponse> activateUserStatusHandler(@PathVariable("userId") Integer userId) throws UserException {
+
+        // Buscar el usuario y activar el estado
+        User user = this.userService.findUserById(userId);
+        user.setStatus(true); // Establecer el estado como true
+        this.userService.updateUser(user.getId(), new UpdateUserRequest()); // Actualiza el usuario
+
+        ApiResponse response = new ApiResponse();
+        response.setMessage("User status activated successfully. New status: " + user.getStatus());
+        response.setStatus(true);
+
+        return new ResponseEntity<ApiResponse>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/status-deactivate/{userId}")
+    public ResponseEntity<ApiResponse> deactivateUserStatusHandler(@PathVariable("userId") Integer userId) throws UserException {
+
+        // Buscar el usuario y desactivar el estado
+        User user = this.userService.findUserById(userId);
+        user.setStatus(false); // Establecer el estado como false
+        this.userService.updateUser(user.getId(), new UpdateUserRequest()); // Actualiza el usuario
+
+        ApiResponse response = new ApiResponse();
+        response.setMessage("User status deactivated successfully. New status: " + user.getStatus());
+        response.setStatus(true);
+
+        return new ResponseEntity<ApiResponse>(response, HttpStatus.OK);
+    }
+
+
 
 }

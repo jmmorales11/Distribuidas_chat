@@ -8,7 +8,7 @@ const SearchBar = ({ querys, setQuerys, handleSearch }) => {
       <input
         className="border-none outline-none bg-slate-200 rounded-md w-[93%] pl-9 py-3"
         type="text"
-        placeholder="Search or Start new chat"
+        placeholder="Buscar un nuevo chat"
         onChange={(e) => {
           setQuerys(e.target.value);
           handleSearch(e.target.value);

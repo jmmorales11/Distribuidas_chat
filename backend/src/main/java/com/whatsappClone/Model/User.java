@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class User {
 
@@ -15,6 +17,8 @@ public class User {
     private String email;
     private String profile;
     private String password;
+    private LocalDateTime timeDisconnected;
+    private Boolean status;
 
     public int getId() {
         return id;
@@ -56,6 +60,22 @@ public class User {
         this.password = password;
     }
 
+    public LocalDateTime getTimeDisconnected() {
+        return timeDisconnected;
+    }
+
+    public void setTimeDisconnected(LocalDateTime timeDisconnected) {
+        this.timeDisconnected = timeDisconnected;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
     public User() {
     }
 
@@ -66,11 +86,18 @@ public class User {
         this.profile = profile;
         this.password = password;
     }
-
+    public void toggleStatus() {
+        if (this.status != null) {
+            this.status = !this.status;
+        } else {
+            this.status = false;
+        }
+    }
     @Override
     public String toString() {
         return "User [id=" + id + ", name=" + name + ", email=" + email + ", profile=" + profile + ", password="
                 + password + "]";
     }
+
 
 }

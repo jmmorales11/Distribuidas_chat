@@ -63,4 +63,18 @@ public class UserServiceImpl implements UserService {
         return users;
     }
 
+    @Override
+    public User toggleUserStatus(Integer userId) throws UserException {
+        User user = findUserById(userId); // Método existente para buscar al usuario
+        if (user == null) {
+            throw new UserException("User not found with id: " + userId);
+        }
+
+        user.toggleStatus(); // Alterna el estado de status
+        // Aquí debes persistir el cambio en la base de datos si estás usando JPA/Hibernate
+        userRepository.save(user); // Asumiendo que tienes un repositorio definido
+        return user;
+    }
+
+
 }

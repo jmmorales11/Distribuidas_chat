@@ -10,7 +10,7 @@ public class HomeController {
 
     @GetMapping("/")
     public ResponseEntity<String> home() {
-        return new ResponseEntity<String>("Welcome", HttpStatus.OK);
+        return new ResponseEntity<String>("Bienvenido", HttpStatus.OK);
     }
 
 }
