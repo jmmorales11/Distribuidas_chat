@@ -3,7 +3,7 @@ import { green } from "@mui/material/colors";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { currentUser, login } from "../../Redux/Auth/Action";
+import { currentUser, login ,activateUserStatus} from "../../Redux/Auth/Action";
 
 const Signin = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -40,9 +40,10 @@ const Signin = () => {
   useEffect(() => {
     // If the current user data is available, navigate to the homepage
     if (auth.reqUser?.name) {
+      dispatch(activateUserStatus(auth.reqUser.id, token)); 
       navigate("/");
     }
-  }, [auth.reqUser, navigate]);
+  }, [auth.reqUser, navigate, token, dispatch]);
 
   return (
     <div>

@@ -43,6 +43,7 @@ public class AuthController {
         String email = user.getEmail();
         String name = user.getName();
         String password = user.getPassword();
+        Boolean status = user.getStatus();
 
         User isUser = this.userRepository.findByEmail(email);
         if (isUser != null) {
@@ -52,6 +53,7 @@ public class AuthController {
         createdUser.setEmail(email);
         createdUser.setName(name);
         createdUser.setPassword(this.passwordEncoder.encode(password));
+        createdUser.setStatus(true);
         // createdUser.setPassword(password);
 
         userRepository.save(createdUser);
