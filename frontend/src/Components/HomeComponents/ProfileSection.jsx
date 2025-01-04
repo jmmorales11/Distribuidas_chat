@@ -1,6 +1,4 @@
 import React from 'react';
-import { TbCircleDashed } from 'react-icons/tb';
-import { BiCommentDetail } from 'react-icons/bi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { Menu, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -33,11 +31,6 @@ const ProfileSection = ({
         <p>{auth.reqUser?.name}</p>
       </div>
       <div className="space-x-3 text-2xl flex">
-        <TbCircleDashed
-          className="cursor-pointer"
-          onClick={() => navigate("/status")}
-        />
-        <BiCommentDetail />
         <div>
           <BsThreeDotsVertical
             id="basic-button"

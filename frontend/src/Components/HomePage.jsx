@@ -14,8 +14,8 @@ import SearchBar from "./HomeComponents/SearchBar";
 import ChatList from "./HomeComponents/ChatList";
 import MessageCard from "./MessageCard/MessageCard";
 import { AiOutlineSearch } from "react-icons/ai";
-import { BsEmojiSmile, BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
-import { ImAttachment } from "react-icons/im";
+import {BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
+import { AiOutlineSend } from "react-icons/ai"; 
 
 
 function HomePage() {
@@ -321,10 +321,7 @@ function HomePage() {
                         : currentChat.users[1].name}
                     </p>
                   </div>
-                  <div className="flex py-3 space-x-4 items-center px-3">
-                    <AiOutlineSearch />
-                    <BsThreeDotsVertical />
-                  </div>
+       
                 </div>
               </div>
 
@@ -347,9 +344,6 @@ function HomePage() {
               {/* Footer Section */}
               <div className="footer bg-[#f0f2f5] absolute bottom-0 w-full py-3 text-2xl">
                 <div className="flex justify-between items-center px-5 relative">
-                  <BsEmojiSmile className="cursor-pointer" />
-                  <ImAttachment />
-
                   <input
                     className="py-2 outline-none border-none bg-white pl-4 rounded-md w-[85%]"
                     type="text"
@@ -363,7 +357,14 @@ function HomePage() {
                       }
                     }}
                   />
-                  <BsMicFill />
+                  {/* Icono de enviar con onClick */}
+                  <AiOutlineSend
+                    className="cursor-pointer"
+                    onClick={() => {
+                      handleCreateNewMessage(); // Enviar mensaje al hacer clic
+                      setContent(""); // Limpiar el cuadro de texto después de enviar
+                    }}
+                  />
                 </div>
               </div>
             </div>
