@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Profile from "./Profile/Profile";
 import CreateGroup from "./Group/CreateGroup";
 import { useDispatch, useSelector } from "react-redux";
-import { currentUser, logoutAction, searchUser } from "../Redux/Auth/Action";
+import { currentUser, logoutAction, searchUser , deactivateUserStatus} from "../Redux/Auth/Action";
 import { createChat, getUsersChat } from "../Redux/Chat/Action";
 import { createMessage, getAllMessages } from "../Redux/Message/Action";
 import SockJs from "sockjs-client/dist/sockjs";
@@ -16,6 +16,7 @@ import MessageCard from "./MessageCard/MessageCard";
 import { AiOutlineSearch } from "react-icons/ai";
 import { BsEmojiSmile, BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
 import { ImAttachment } from "react-icons/im";
+
 
 function HomePage() {
   const [querys, setQuerys] = useState("");
@@ -216,9 +217,16 @@ function HomePage() {
 
   // Function to handle user logout
   const handleLogout = () => {
+    const userId = auth.reqUser?.id; // Obtén el ID del usuario actual del estado global
+    if (userId && token) {
+      // Desactiva el estado del usuario
+      dispatch(deactivateUserStatus(userId, token));
+    }
+    // Limpia la autenticación y redirige al inicio de sesión
     dispatch(logoutAction());
     navigate("/signin");
   };
+  
 
   // Effect to check if the user is authenticated
   useEffect(() => {
