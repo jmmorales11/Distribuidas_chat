@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {Alert, Snackbar} from "@mui/material";
+import { Alert, Snackbar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { currentUser, login, activateUserStatus } from "../../Redux/Auth/Action";
@@ -7,15 +7,24 @@ import ChatImage from "./people-chatting.jpg";
 
 const Signin = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [inputData, setInputData] = useState({ email: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const { auth } = useSelector((store) => store);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(login(inputData));
+    const result = await dispatch(login(inputData)); // Asume que `login` devuelve una promesa.
+    if (result?.success) {
+      setSnackbarMessage("Login Successfully!!");
+      setSnackbarSeverity("success");
+    } else {
+      setSnackbarMessage("Login refused");
+      setSnackbarSeverity("error");
+    }
     setOpenSnackbar(true);
   };
 
@@ -36,7 +45,7 @@ const Signin = () => {
 
   useEffect(() => {
     if (auth.reqUser?.name) {
-      dispatch(activateUserStatus(auth.reqUser.id, token)); 
+      dispatch(activateUserStatus(auth.reqUser.id, token));
       navigate("/");
     }
   }, [auth.reqUser, navigate, token, dispatch]);
@@ -52,10 +61,17 @@ const Signin = () => {
           />
         </div>
         <div className="w-full md:w-1/2 p-8">
-          <h2 className="text-4xl font-bold text-center text-white mb-8 drop-shadow-lg">Sign In</h2>
+          <h2 className="text-4xl font-bold text-center text-white mb-8 drop-shadow-lg">
+            Sign In
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-              <label htmlFor="email" className="block text-lg font-medium text-white drop-shadow">Email</label>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-lg font-medium text-white drop-shadow"
+              >
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
@@ -67,7 +83,12 @@ const Signin = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-lg font-medium text-white drop-shadow">Password</label>
+              <label
+                htmlFor="password"
+                className="block text-lg font-medium text-white drop-shadow"
+              >
+                Password
+              </label>
               <input
                 type="password"
                 id="password"
@@ -79,17 +100,19 @@ const Signin = () => {
               />
             </div>
             <div>
-            <button
-              type="submit"
-              className="w-full text-xl bg-opacity-80 text-white hover:text-blue-200 focus:outline-none transition-colors duration-300 border-b-2 border-transparent hover:border-blue-200 bg-white backdrop-filter backdrop-blur-sm px-3 py-3 rounded-lg hover:bg-opacity-75"
-            >
-              <span className="text-blue-500 font-semibold">Sign In</span>
-            </button>
+              <button
+                type="submit"
+                className="w-full text-xl bg-opacity-80 text-white hover:text-blue-200 focus:outline-none transition-colors duration-300 border-b-2 border-transparent hover:border-blue-200 bg-white backdrop-filter backdrop-blur-sm px-3 py-3 rounded-lg hover:bg-opacity-75"
+              >
+                <span className="text-blue-500 font-semibold">Sign In</span>
+              </button>
             </div>
           </form>
 
           <div className="mt-8 flex items-center justify-center">
-            <span className="text-lg text-white drop-shadow">Don't have an account?</span>
+            <span className="text-lg text-white drop-shadow">
+              Don't have an account?
+            </span>
             <button
               onClick={() => navigate("/signup")}
               className="ml-2 text-xl bg-opacity-80 text-white hover:text-blue-200 focus:outline-none transition-colors duration-300 border-b-2 border-transparent hover:border-blue-200 bg-white backdrop-filter backdrop-blur-sm px-3 py-1 rounded-lg hover:bg-opacity-75"
@@ -99,21 +122,19 @@ const Signin = () => {
           </div>
         </div>
       </div>
-      <div>
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
-          onClose={handleSnackbarClose}
-        >
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
         <Alert
-            onClose={handleSnackbarClose}
-            severity="success"
-            sx={{ width: "100%" }}
-          >
-            Login Successfully!!
-          </Alert>
-        </Snackbar>
-      </div>
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
