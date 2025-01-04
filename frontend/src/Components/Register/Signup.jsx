@@ -1,9 +1,9 @@
-import { Alert, Button, Snackbar } from "@mui/material";
-import { green } from "@mui/material/colors";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Alert, Snackbar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { currentUser, register } from "../../Redux/Auth/Action";
+import ChatImage from "./people_register.jpg";
 
 const Signup = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -19,7 +19,7 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(register(inputData)); // Dispatch the register action with inputData
+    dispatch(register(inputData));
     setOpenSnackbar(true);
   };
 
@@ -28,13 +28,14 @@ const Signup = () => {
     setInputData((values) => ({ ...values, [name]: value }));
   };
 
-  const handleSnackbarClose = () => {
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") return;
     setOpenSnackbar(false);
   };
 
   useEffect(() => {
     if (token) dispatch(currentUser(token));
-  }, [token]);
+  }, [token, dispatch]);
 
   useEffect(() => {
     if (auth.reqUser?.name) {
@@ -43,79 +44,109 @@ const Signup = () => {
   }, [auth.reqUser, navigate]);
 
   return (
-    <div>
-      <div className="flex flex-col justify-center min-h-screen w-[100vw] items-center">
-        <div className="p-10 w-[30%] shadow-md bg-white">
-          <form onSubmit={handleSubmit} className="space-y-5 ">
+    <div className="flex justify-center items-center min-h-screen w-screen bg-gradient-to-br from-blue-800 to-blue-500">
+      <div className="flex w-full max-w-5xl backdrop-filter backdrop-blur-xl bg-white bg-opacity-10 rounded-2xl shadow-2xl border border-opacity-30 border-white overflow-hidden">
+        <div className="w-full md:w-1/2 p-8">
+          <h2 className="text-4xl font-bold text-center text-white mb-8 drop-shadow-lg">
+            Sign Up
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <p className="mb-2">Full name</p>
+              <label
+                htmlFor="name"
+                className="block text-lg font-medium text-white drop-shadow"
+              >
+                Full Name
+              </label>
               <input
                 type="text"
+                id="name"
                 name="name"
                 placeholder="Enter your full name"
                 onChange={handleChange}
                 value={inputData.name}
-                className="py-2 outline outline-green-600 w-full rounded-md border"
+                className="mt-1 block w-full px-4 py-3 bg-white bg-opacity-20 border border-transparent rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent text-lg"
               />
             </div>
             <div>
-              <p className="mb-2">Email</p>
+              <label
+                htmlFor="email"
+                className="block text-lg font-medium text-white drop-shadow"
+              >
+                Email
+              </label>
               <input
-                type="text"
+                type="email"
+                id="email"
+                name="email"
                 placeholder="Enter your email"
                 onChange={handleChange}
                 value={inputData.email}
-                name="email"
-                className="py-2 outline outline-green-600 w-full rounded-md border"
+                className="mt-1 block w-full px-4 py-3 bg-white bg-opacity-20 border border-transparent rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent text-lg"
               />
             </div>
             <div>
-              <p className="mb-2">Password</p>
+              <label
+                htmlFor="password"
+                className="block text-lg font-medium text-white drop-shadow"
+              >
+                Password
+              </label>
               <input
-                type="password" // Change to type="password" for security
+                type="password"
+                id="password"
                 name="password"
                 placeholder="Enter your password"
                 onChange={handleChange}
                 value={inputData.password}
-                className="py-2 outline outline-green-600 w-full rounded-md border"
+                className="mt-1 block w-full px-4 py-3 bg-white bg-opacity-20 border border-transparent rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent text-lg"
               />
             </div>
             <div>
-              <Button
+              <button
                 type="submit"
-                sx={{ bgcolor: green[700], padding: ".5rem 0rem" }}
-                className="w-full"
-                variant="contained"
+                className="w-full text-xl bg-opacity-80 text-white hover:text-blue-200 focus:outline-none transition-colors duration-300 border-b-2 border-transparent hover:border-blue-200 bg-white backdrop-filter backdrop-blur-sm px-3 py-3 rounded-lg hover:bg-opacity-75"
               >
-                Sign Up
-              </Button>
+                <span className="text-blue-500 font-semibold">Sign Up</span>
+              </button>
             </div>
           </form>
 
-          <div className="flex space-x-3 items-center mt-5">
-            <p className="m-0">Already Have an Account?</p>
-            <Button variant="text" onClick={() => navigate("/signin")}>
-              Login
-            </Button>
+          <div className="mt-8 flex items-center justify-center">
+            <span className="text-lg text-white drop-shadow">
+              Already have an account?
+            </span>
+            <button
+              onClick={() => navigate("/signin")}
+              className="ml-2 text-xl bg-opacity-80 text-white hover:text-blue-200 focus:outline-none transition-colors duration-300 border-b-2 border-transparent hover:border-blue-200 bg-white backdrop-filter backdrop-blur-sm px-3 py-1 rounded-lg hover:bg-opacity-75"
+            >
+              <span className="text-blue-500 font-semibold">Sign In</span>
+            </button>
           </div>
         </div>
+        <div className="md:block w-1/2 relative">
+          <img
+            src={ChatImage}
+            alt="People chatting"
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
-      <div>
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
           onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
         >
-          <Alert
-            onClose={handleSnackbarClose}
-            severity="success"
-            sx={{ width: "100%" }}
-          >
-            Your account has been successfully created!!
-          </Alert>
-        </Snackbar>
-      </div>
+          Your account has been successfully created!!
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
+
 export default Signup;
