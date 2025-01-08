@@ -1,6 +1,6 @@
-import React from "react";
-
-const ChatCard = ({ userImg, name, lastMessage, status }) => {
+const ChatCard = ({ userImg, name, lastMessage, status, hasUnreadMessages }) => {
+  
+  
   // Function to format a timestamp to a readable date
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "";
@@ -17,7 +17,12 @@ const ChatCard = ({ userImg, name, lastMessage, status }) => {
   );
 
   return (
-    <div className="flex items-center justify-center py-2 group cursor-pointer">
+    
+    <div
+      className={`flex items-center justify-center py-2 group cursor-pointer ${hasUnreadMessages ? "bg-yellow-100 font-bold" : "bg-white"
+        }`}
+    >
+
       <div className="w-[19%]">
         <img className="h-13 w-14 rounded-full" src={userImg} alt="profile" />
       </div>

@@ -89,4 +89,23 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    @Override
+    public void markMessagesAsRead(Integer chatId, Integer userId) throws ChatException {
+        // Buscar mensajes no leídos para este chat y usuario
+        List<Message> unreadMessages = this.messageRepository.findUnreadMessages(chatId, userId);
+
+        if (unreadMessages.isEmpty()) {
+            throw new ChatException("No unread messages found for this chat");
+        }
+
+        // Marcar cada mensaje como leído
+        for (Message message : unreadMessages) {
+            message.setRead(true);
+        }
+
+        // Guardar los mensajes actualizados en la base de datos
+        this.messageRepository.saveAll(unreadMessages);
+    }
+
+
 }

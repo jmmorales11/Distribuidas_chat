@@ -1,5 +1,5 @@
 import { BASE_API_URL } from "../../config/api";
-import { CREATE_NEW_MESSAGE, GET_ALL_MESSAGE } from "./ActionType.js";
+import { CREATE_NEW_MESSAGE, GET_ALL_MESSAGE, MARK_MESSAGES_AS_READ } from "./ActionType.js";
 
 // Action creator for creating a new message
 export const createMessage = (messageData) => async (dispatch) => {
@@ -45,3 +45,29 @@ export const getAllMessages = (reqData) => async (dispatch) => {
     console.log("catch error ", error);
   }
 };
+
+// Acción para marcar mensajes como leídos
+export const markMessagesAsRead = (chatId, token) => async (dispatch) => {
+  try {
+    // Realiza la llamada al backend para marcar los mensajes como leídos
+    await fetch(`http://localhost:8080/api/messages/markAsRead/${chatId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Despacha la acción para actualizar el estado global
+    dispatch({
+      type: MARK_MESSAGES_AS_READ,
+      payload: { chatId },
+    });
+
+    console.log(`Mensajes del chat ${chatId} marcados como leídos.`);
+  } catch (error) {
+    console.error("Error al marcar mensajes como leídos:", error);
+  }
+};
+
+
+

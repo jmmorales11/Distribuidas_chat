@@ -16,6 +16,7 @@ public class Message {
     private Integer id;
     private String content;
     private LocalDateTime timestamp;
+    private boolean isRead; // Nuevo campo para estado de lectura
 
     @ManyToOne
     private Chat chat;
@@ -61,6 +62,14 @@ public class Message {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean isRead) {
+        this.isRead = isRead;
     }
 
     public Message() {

@@ -19,4 +19,5 @@ public interface MessageService {
 
     public void deleteMessage(Integer messageId, User reqUser) throws MessageException;
 
+    public void markMessagesAsRead(Integer chatId, Integer userId) throws ChatException;
 }

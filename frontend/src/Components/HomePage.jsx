@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Profile from "./Profile/Profile";
 import CreateGroup from "./Group/CreateGroup";
 import { useDispatch, useSelector } from "react-redux";
-import { currentUser, logoutAction, searchUser , deactivateUserStatus} from "../Redux/Auth/Action";
+import { currentUser, logoutAction, searchUser, deactivateUserStatus } from "../Redux/Auth/Action";
 import { createChat, getUsersChat } from "../Redux/Chat/Action";
 import { createMessage, getAllMessages } from "../Redux/Message/Action";
 import SockJs from "sockjs-client/dist/sockjs";
@@ -14,8 +14,9 @@ import SearchBar from "./HomeComponents/SearchBar";
 import ChatList from "./HomeComponents/ChatList";
 import MessageCard from "./MessageCard/MessageCard";
 import { AiOutlineSearch } from "react-icons/ai";
-import {BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
-import { AiOutlineSend } from "react-icons/ai"; 
+import { BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
+import { AiOutlineSend } from "react-icons/ai";
+import { markMessagesAsRead } from "../Redux/Message/Action";
 
 
 function HomePage() {
@@ -90,14 +91,42 @@ function HomePage() {
 
   // Callback to handle received messages from WebSocket
   const onMessageReceive = (payload) => {
+    console.log("Mensaje recibido:", payload.body); // ¿Llega aquí?
     const receivedMessage = JSON.parse(payload.body);
+
+    // Actualiza los mensajes globalmente (Redux)
+    dispatch({
+      type: "CREATE_NEW_MESSAGE", // Usar el ActionType adecuado
+      payload: receivedMessage,
+    });
+
+    // Actualiza el estado local de mensajes
     setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+
+    // Actualiza el estado de lastMessages
+    setLastMessages((prevLastMessages) => ({
+      ...prevLastMessages,
+      [receivedMessage.chat.id]: receivedMessage,
+    }));
   };
+
 
   // Effect to establish a WebSocket connection
   useEffect(() => {
-    connect();
-  }, []);
+    if (!stompClient && !isConnected) {
+      connect();
+      console.log("WebSocket conectado")
+    }
+
+    return () => {
+      if (stompClient) {
+        stompClient.disconnect(() => {
+          console.log("WebSocket desconectado");
+        });
+      }
+    };
+  }, [stompClient, isConnected]);
+
 
   // Effect to subscribe to a chat when connected
   useEffect(() => {
@@ -105,9 +134,13 @@ function HomePage() {
       const subscription = currentChat.isGroupChat
         ? stompClient.subscribe(`/group/${currentChat.id}`, onMessageReceive)
         : stompClient.subscribe(`/user/${currentChat.id}`, onMessageReceive);
+        console.log(`Suscrito al canal: ${currentChat.isGroupChat ? `/group/${currentChat.id}` : `/user/${currentChat.id}`}`);
+
 
       return () => {
         subscription.unsubscribe();
+        console.log("Desuscrito del canal");
+
       };
     }
   }, [isConnected, stompClient, currentChat]);
@@ -138,6 +171,19 @@ function HomePage() {
   useEffect(() => {
     dispatch(getUsersChat({ token }));
   }, [chat.createdChat, chat.createdGroup]);
+
+  useEffect(() => {
+    const updatedLastMessages = { ...lastMessages };
+
+    // Si hay mensajes nuevos, actualiza el último mensaje
+    if (message.messages && message.messages.length > 0) {
+      message.messages.forEach((msg) => {
+        updatedLastMessages[msg.chat.id] = msg;
+      });
+
+      setLastMessages(updatedLastMessages);
+    }
+  }, [message.messages]);
 
   // Function to handle opening the user menu
   const handleClick = (e) => {
@@ -176,9 +222,30 @@ function HomePage() {
   }, [token]);
 
   // Function to set the current chat
-  const handleCurrentChat = (item) => {
-    setCurrentChat(item);
+  const handleCurrentChat = async (item) => {
+    setCurrentChat(item); // Establece el chat actual
+
+    try {
+      // Llama al endpoint para marcar mensajes como leídos
+      await fetch(`http://localhost:8080/api/messages/markAsRead/${item.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`, // Incluye el token para autenticación
+        },
+      });
+
+      // Actualiza lastMessages para reflejar el estado de lectura
+      setLastMessages((prevLastMessages) => ({
+        ...prevLastMessages,
+        [item.id]: { ...prevLastMessages[item.id], read: true },
+      }));
+
+      console.log(`Mensajes del chat ${item.id} marcados como leídos.`);
+    } catch (error) {
+      console.error("Error al marcar mensajes como leídos:", error);
+    }
   };
+
 
   // Effect to fetch messages when chat changes
   useEffect(() => {
@@ -226,7 +293,9 @@ function HomePage() {
     dispatch(logoutAction());
     navigate("/signin");
   };
-  
+
+
+
 
   // Effect to check if the user is authenticated
   useEffect(() => {
@@ -237,47 +306,48 @@ function HomePage() {
   return (
 
     <div className="relative">
-    <div className="w-[100vw] py-14 bg-[#00a884]">
-      <div className="flex bg-[#f0f2f5] h-[90vh] absolute top-[5vh] left-[2vw] w-[96vw]">
-        <div className="left w-[30%] h-full bg-[#e8e9ec]">
-          {isProfile && (
-            <div className="w-full h-full">
-              <Profile handleCloseOpenProfile={handleCloseOpenProfile} />
-            </div>
-          )}
-          {isGroup && <CreateGroup setIsGroup={setIsGroup} />}
-          {!isProfile && !isGroup && (
-            <div className="w-full">
-              <ProfileSection
-                auth={auth}
-                isProfile={isProfile}
-                isGroup={isGroup}
-                handleNavigate={handleNavigate}
-                handleClick={handleClick}
-                handleCreateGroup={handleCreateGroup}
-                handleLogout={handleLogout}
-                handleClose={handleClose}
-                open={open}
-                anchorEl={anchorEl}
-              />
-              <SearchBar
-                querys={querys}
-                setQuerys={setQuerys}
-                handleSearch={handleSearch}
-              />
-              <ChatList
-                querys={querys}
-                auth={auth}
-                chat={chat}
-                lastMessages={lastMessages}
-                handleClickOnChatCard={handleClickOnChatCard}
-                handleCurrentChat={handleCurrentChat}
-              />
-            </div>
-          )}
-        </div>
-         {/* Default WhatsApp Page */}
-         {!currentChat?.id && (
+      <div className="w-[100vw] py-14 bg-[#00a884]">
+        <div className="flex bg-[#f0f2f5] h-[90vh] absolute top-[5vh] left-[2vw] w-[96vw]">
+          <div className="left w-[30%] h-full bg-[#e8e9ec]">
+            {isProfile && (
+              <div className="w-full h-full">
+                <Profile handleCloseOpenProfile={handleCloseOpenProfile} />
+              </div>
+            )}
+            {isGroup && <CreateGroup setIsGroup={setIsGroup} />}
+            {!isProfile && !isGroup && (
+              <div className="w-full">
+                <ProfileSection
+                  auth={auth}
+                  isProfile={isProfile}
+                  isGroup={isGroup}
+                  handleNavigate={handleNavigate}
+                  handleClick={handleClick}
+                  handleCreateGroup={handleCreateGroup}
+                  handleLogout={handleLogout}
+                  handleClose={handleClose}
+                  open={open}
+                  anchorEl={anchorEl}
+                />
+                <SearchBar
+                  querys={querys}
+                  setQuerys={setQuerys}
+                  handleSearch={handleSearch}
+                />
+                <ChatList
+                  querys={querys}
+                  auth={auth}
+                  chat={chat}
+                  lastMessages={lastMessages} // Pasa el estado actualizado
+                  handleClickOnChatCard={handleClickOnChatCard}
+                  handleCurrentChat={handleCurrentChat}
+                />
+
+              </div>
+            )}
+          </div>
+          {/* Default WhatsApp Page */}
+          {!currentChat?.id && (
             <div className="w-[70%] flex flex-col items-center justify-center h-full">
               <div className="max-w-[70%] text-center">
                 <img
@@ -304,11 +374,11 @@ function HomePage() {
                       src={
                         currentChat.group
                           ? currentChat.chat_image ||
-                            "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
+                          "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
                           : auth.reqUser?.id !== currentChat.users[0]?.id
-                          ? currentChat.users[0]?.profile ||
+                            ? currentChat.users[0]?.profile ||
                             "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
-                          : currentChat.users[1]?.profile ||
+                            : currentChat.users[1]?.profile ||
                             "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
                       }
                       alt="profile"
@@ -317,11 +387,11 @@ function HomePage() {
                       {currentChat.group
                         ? currentChat.chatName
                         : auth.reqUser?.id !== currentChat.users[0]?.id
-                        ? currentChat.users[0].name
-                        : currentChat.users[1].name}
+                          ? currentChat.users[0].name
+                          : currentChat.users[1].name}
                     </p>
                   </div>
-       
+
                 </div>
               </div>
 
@@ -374,5 +444,5 @@ function HomePage() {
     </div>
   );
 }
-        
+
 export default HomePage;
