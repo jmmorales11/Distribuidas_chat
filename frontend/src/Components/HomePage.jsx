@@ -249,10 +249,13 @@ function HomePage() {
 
   // Effect to fetch messages when chat changes
   useEffect(() => {
-    chat?.chats &&
-      chat?.chats?.forEach((item) => {
-        dispatch(getAllMessages({ chatId: item.id, token }));
+    if (Array.isArray(chat?.chats)) {
+      chat.chats.forEach((chat) => {
+        dispatch(getAllMessages({ chatId: chat.id, token }));
       });
+    }else{
+      console.error("chat.chats no es un array:", chat?.chats);
+    }
   }, [chat?.chats, token, dispatch]);
 
   // Effect to update lastMessages when messages change
