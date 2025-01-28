@@ -34,12 +34,22 @@ public class AppConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration cfg = new CorsConfiguration();
 
-                        cfg.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-                        cfg.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000"));
+                        // Permitir las direcciones IP necesarias
+                        cfg.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:3000", // Para desarrollo local
+                                "http://192.168.1.15:3000" // Cambia esto por la IP de tu computadora en tu red local
+                        ));
+
+                        // También puedes usar patrones
+                        cfg.setAllowedOriginPatterns(Arrays.asList(
+                                "http://localhost:3000",
+                                "http://192.168.1.15:3000" // Patrones para más flexibilidad
+                        ));
 
                         cfg.setAllowedMethods(Collections.singletonList("*"));
                         cfg.setAllowedHeaders(Collections.singletonList("*"));
                         cfg.setExposedHeaders(Arrays.asList("Authorization"));
+                        cfg.setAllowCredentials(true); // Permitir cookies o credenciales si es necesario
                         cfg.setMaxAge(3600L);
 
                         return cfg;
