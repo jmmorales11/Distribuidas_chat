@@ -17,7 +17,6 @@ const ChatCard = ({ userImg, name, lastMessage, status, hasUnreadMessages }) => 
   );
 
   return (
-    
     <div
       className={`flex items-center justify-center py-2 group cursor-pointer ${hasUnreadMessages ? "bg-yellow-100 font-bold" : "bg-white"
         }`}
