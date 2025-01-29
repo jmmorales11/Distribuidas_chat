@@ -1,451 +1,421 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./HomePage.css";
-import { useNavigate } from "react-router-dom";
-import Profile from "./Profile/Profile";
-import CreateGroup from "./Group/CreateGroup";
-import { useDispatch, useSelector } from "react-redux";
-import { currentUser, logoutAction, searchUser, deactivateUserStatus } from "../Redux/Auth/Action";
-import { createChat, getUsersChat } from "../Redux/Chat/Action";
-import { createMessage, getAllMessages } from "../Redux/Message/Action";
-import SockJs from "sockjs-client/dist/sockjs";
-import { over } from "stompjs";
-import ProfileSection from "./HomeComponents/ProfileSection";
-import SearchBar from "./HomeComponents/SearchBar";
-import ChatList from "./HomeComponents/ChatList";
-import MessageCard from "./MessageCard/MessageCard";
-import { AiOutlineSearch } from "react-icons/ai";
-import { BsMicFill, BsThreeDotsVertical } from "react-icons/bs";
-import { AiOutlineSend } from "react-icons/ai";
-import { markMessagesAsRead } from "../Redux/Message/Action";
-
+import React, { useEffect, useRef, useState } from "react"
+import "./HomePage.css"
+import { useNavigate } from "react-router-dom"
+import Profile from "./Profile/Profile"
+import CreateGroup from "./Group/CreateGroup"
+import { useDispatch, useSelector } from "react-redux"
+import { currentUser, logoutAction, searchUser, deactivateUserStatus } from "../Redux/Auth/Action"
+import { createChat, getUsersChat } from "../Redux/Chat/Action"
+import { createMessage, getAllMessages, markMessagesAsRead } from "../Redux/Message/Action"
+import SockJs from "sockjs-client/dist/sockjs"
+import { over } from "stompjs"
+import ProfileSection from "./HomeComponents/ProfileSection"
+import SearchBar from "./HomeComponents/SearchBar"
+import ChatList from "./HomeComponents/ChatList"
+import MessageCard from "./MessageCard/MessageCard"
+import { AiOutlineSearch, AiOutlineSend } from "react-icons/ai"
+import { BsMicFill, BsThreeDotsVertical, BsArrowLeft } from "react-icons/bs"
 
 function HomePage() {
-  const [querys, setQuerys] = useState("");
-  const [currentChat, setCurrentChat] = useState(null);
-  const [content, setContent] = useState("");
-  const [isProfile, setIsProfile] = useState(false);
-  const navigate = useNavigate();
-  const [isGroup, setIsGroup] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-  const dispatch = useDispatch();
-  const { auth, chat, message } = useSelector((store) => store);
-  const token = localStorage.getItem("token");
-  const [stompClient, setStompClient] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [lastMessages, setLastMessages] = useState({});
-  const messageContainerRef = useRef(null);
+  const [querys, setQuerys] = useState("")
+  const [currentChat, setCurrentChat] = useState(null)
+  const [content, setContent] = useState("")
+  const [isProfile, setIsProfile] = useState(false)
+  const navigate = useNavigate()
+  const [isGroup, setIsGroup] = useState(false)
+  const [anchorEl, setAnchorEl] = useState(null)
+  const open = Boolean(anchorEl)
+  const dispatch = useDispatch()
+  const { auth, chat, message } = useSelector((store) => store)
+  const token = localStorage.getItem("token")
+  const [stompClient, setStompClient] = useState(null)
+  const [isConnected, setIsConnected] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [lastMessages, setLastMessages] = useState({})
+  const messageContainerRef = useRef(null)
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768)
+  const [showChatList, setShowChatList] = useState(true)
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768)
     }
-  }, [messages]);
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
-  // Function to establish a WebSocket connection
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight
+    }
+  }, [messageContainerRef])
+
   const connect = () => {
-    const sock = new SockJs("http://localhost:8080/ws");
-    const temp = over(sock);
-    setStompClient(temp);
+    const sock = new SockJs("http://localhost:8080/ws")
+    const temp = over(sock)
+    setStompClient(temp)
 
     const headers = {
       Authorization: `Bearer ${token}`,
       "X-XSRF-TOKEN": getCookie("XSRF-TOKEN"),
-    };
+    }
 
-    // Connect to WebSocket server
-    temp.connect(headers, onConnect, onError);
-  };
+    temp.connect(headers, onConnect, onError)
+  }
 
-  // Function to get a specific cookie by name
   function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
     if (parts.length === 2) {
-      return parts.pop().split(";").shift();
+      return parts.pop().split(";").shift()
     }
   }
 
-  // Callback for WebSocket connection error
   const onError = (error) => {
-    console.log("on error ", error);
-  };
+    console.log("on error ", error)
+  }
 
-  // Callback for successful WebSocket connection
   const onConnect = () => {
-    setIsConnected(true);
+    setIsConnected(true)
 
-    // Subscribe to the current chat messages based on the chat type
     if (stompClient && currentChat) {
       if (currentChat.isGroupChat) {
-        // Subscribe to group chat messages
-        stompClient.subscribe(`/group/${currentChat?.id}`, onMessageReceive);
+        stompClient.subscribe(`/group/${currentChat?.id}`, onMessageReceive)
       } else {
-        // Subscribe to direct user messages
-        stompClient.subscribe(`/user/${currentChat?.id}`, onMessageReceive);
+        stompClient.subscribe(`/user/${currentChat?.id}`, onMessageReceive)
       }
     }
-  };
+  }
 
-  // Callback to handle received messages from WebSocket
   const onMessageReceive = (payload) => {
-    console.log("Mensaje recibido:", payload.body); // ¿Llega aquí?
-    const receivedMessage = JSON.parse(payload.body);
+    console.log("Mensaje recibido:", payload.body)
+    const receivedMessage = JSON.parse(payload.body)
 
-    // Actualiza los mensajes globalmente (Redux)
     dispatch({
-      type: "CREATE_NEW_MESSAGE", // Usar el ActionType adecuado
+      type: "CREATE_NEW_MESSAGE",
       payload: receivedMessage,
-    });
+    })
 
-    // Actualiza el estado local de mensajes
-    setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+    setMessages((prevMessages) => [...prevMessages, receivedMessage])
 
-    // Actualiza el estado de lastMessages
     setLastMessages((prevLastMessages) => ({
       ...prevLastMessages,
       [receivedMessage.chat.id]: receivedMessage,
-    }));
-  };
+    }))
+  }
 
-
-  // Effect to establish a WebSocket connection
   useEffect(() => {
     if (!stompClient && !isConnected) {
-      connect();
+      connect()
       console.log("WebSocket conectado")
     }
 
     return () => {
       if (stompClient) {
         stompClient.disconnect(() => {
-          console.log("WebSocket desconectado");
-        });
+          console.log("WebSocket desconectado")
+        })
       }
-    };
-  }, [stompClient, isConnected]);
+    }
+  }, [stompClient, isConnected])
 
-
-  // Effect to subscribe to a chat when connected
   useEffect(() => {
     if (isConnected && stompClient && currentChat?.id) {
       const subscription = currentChat.isGroupChat
         ? stompClient.subscribe(`/group/${currentChat.id}`, onMessageReceive)
-        : stompClient.subscribe(`/user/${currentChat.id}`, onMessageReceive);
-        console.log(`Suscrito al canal: ${currentChat.isGroupChat ? `/group/${currentChat.id}` : `/user/${currentChat.id}`}`);
-
+        : stompClient.subscribe(`/user/${currentChat.id}`, onMessageReceive)
+      console.log(
+        `Suscrito al canal: ${currentChat.isGroupChat ? `/group/${currentChat.id}` : `/user/${currentChat.id}`}`,
+      )
 
       return () => {
-        subscription.unsubscribe();
-        console.log("Desuscrito del canal");
-
-      };
+        subscription.unsubscribe()
+        console.log("Desuscrito del canal")
+      }
     }
-  }, [isConnected, stompClient, currentChat]);
+  }, [isConnected, stompClient, currentChat])
 
-  // Effect to handle sending a new message via WebSocket
   useEffect(() => {
     if (message.newMessage && stompClient) {
-      stompClient.send("/app/message", {}, JSON.stringify(message.newMessage));
-      setMessages((prevMessages) => [...prevMessages, message.newMessage]);
+      stompClient.send("/app/message", {}, JSON.stringify(message.newMessage))
+      setMessages((prevMessages) => [...prevMessages, message.newMessage])
     }
-  }, [message.newMessage, stompClient]);
+  }, [message.newMessage, stompClient])
 
-  // Effect to set the messages state from the store
   useEffect(() => {
     if (message.messages) {
-      setMessages(message.messages);
+      setMessages(message.messages)
     }
-  }, [message.messages]);
+  }, [message.messages])
 
-  // Effect to get all messages when the current chat changes
   useEffect(() => {
     if (currentChat?.id) {
-      dispatch(getAllMessages({ chatId: currentChat.id, token }));
+      dispatch(getAllMessages({ chatId: currentChat.id, token }))
     }
-  }, [currentChat, message.newMessage]);
-
-  // Effect to get user chats and groups
-  useEffect(() => {
-    dispatch(getUsersChat({ token }));
-  }, [chat.createdChat, chat.createdGroup]);
+  }, [currentChat, message.newMessage])
 
   useEffect(() => {
-    const updatedLastMessages = { ...lastMessages };
+    dispatch(getUsersChat({ token }))
+  }, [chat.createdChat, chat.createdGroup])
 
-    // Si hay mensajes nuevos, actualiza el último mensaje
+  useEffect(() => {
+    const updatedLastMessages = { ...lastMessages }
+
     if (message.messages && message.messages.length > 0) {
       message.messages.forEach((msg) => {
-        updatedLastMessages[msg.chat.id] = msg;
-      });
+        updatedLastMessages[msg.chat.id] = msg
+      })
 
-      setLastMessages(updatedLastMessages);
+      setLastMessages(updatedLastMessages)
     }
-  }, [message.messages]);
+  }, [message.messages])
 
-  // Function to handle opening the user menu
   const handleClick = (e) => {
-    setAnchorEl(e.currentTarget);
-  };
+    setAnchorEl(e.currentTarget)
+  }
 
-  // Function to handle closing the user menu
   const handleClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
 
-  // Function to handle clicking on a chat card
   const handleClickOnChatCard = (userId) => {
-    dispatch(createChat({ token, data: { userId } }));
-  };
+    dispatch(createChat({ token, data: { userId } }))
+  }
 
-  // Function to handle user search
   const handleSearch = (keyword) => {
-    dispatch(searchUser({ keyword, token }));
-  };
+    dispatch(searchUser({ keyword, token }))
+  }
 
-  // Function to create a new message
   const handleCreateNewMessage = () => {
     dispatch(
       createMessage({
         token,
         data: { chatId: currentChat.id, content: content },
-      })
-    );
-    setContent(""); // Clear content after sending
-  };
+      }),
+    )
+    setContent("")
+  }
 
-  // Effect to get the current user's information
   useEffect(() => {
-    dispatch(currentUser(token));
-  }, [token]);
+    dispatch(currentUser(token))
+  }, [token])
 
-  // Function to set the current chat
   const handleCurrentChat = async (item) => {
-    setCurrentChat(item); // Establece el chat actual
+    setCurrentChat(item)
+
+    if (isMobileView) {
+      setShowChatList(false)
+    }
 
     try {
-      // Llama al endpoint para marcar mensajes como leídos
       await fetch(`http://localhost:8080/api/messages/markAsRead/${item.id}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`, // Incluye el token para autenticación
+          Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
-      // Actualiza lastMessages para reflejar el estado de lectura
       setLastMessages((prevLastMessages) => ({
         ...prevLastMessages,
         [item.id]: { ...prevLastMessages[item.id], read: true },
-      }));
+      }))
 
-      console.log(`Mensajes del chat ${item.id} marcados como leídos.`);
+      console.log(`Mensajes del chat ${item.id} marcados como leídos.`)
     } catch (error) {
-      console.error("Error al marcar mensajes como leídos:", error);
+      console.error("Error al marcar mensajes como leídos:", error)
     }
-  };
+  }
 
-
-  // Effect to fetch messages when chat changes
   useEffect(() => {
     if (Array.isArray(chat?.chats)) {
       chat.chats.forEach((chat) => {
-        dispatch(getAllMessages({ chatId: chat.id, token }));
-      });
-    }else{
-      console.error("chat.chats no es un array:", chat?.chats);
+        dispatch(getAllMessages({ chatId: chat.id, token }))
+      })
+    } else {
+      console.error("chat.chats no es un array:", chat?.chats)
     }
-  }, [chat?.chats, token, dispatch]);
+  }, [chat?.chats, token, dispatch])
 
-  // Effect to update lastMessages when messages change
   useEffect(() => {
-    const prevLastMessages = { ...lastMessages };
+    const prevLastMessages = { ...lastMessages }
     if (message.messages && message.messages.length > 0) {
       message.messages.forEach((msg) => {
-        prevLastMessages[msg.chat.id] = msg;
-      });
+        prevLastMessages[msg.chat.id] = msg
+      })
 
-      setLastMessages(prevLastMessages);
+      setLastMessages(prevLastMessages)
     }
-  }, [message.messages]);
+  }, [message.messages])
 
-  // Function to navigate to the user's profile
   const handleNavigate = () => {
-    setIsProfile(true);
-  };
+    setIsProfile(true)
+  }
 
-  // Function to close the user's profile
   const handleCloseOpenProfile = () => {
-    setIsProfile(false);
-  };
+    setIsProfile(false)
+  }
 
-  // Function to handle creating a new group
   const handleCreateGroup = () => {
-    setIsGroup(true);
-  };
+    setIsGroup(true)
+  }
 
-  // Function to handle user logout
   const handleLogout = () => {
-    const userId = auth.reqUser?.id; // Obtén el ID del usuario actual del estado global
+    const userId = auth.reqUser?.id
     if (userId && token) {
-      // Desactiva el estado del usuario
-      dispatch(deactivateUserStatus(userId, token));
+      dispatch(deactivateUserStatus(userId, token))
     }
-    // Limpia la autenticación y redirige al inicio de sesión
-    dispatch(logoutAction());
-    navigate("/signin");
-  };
+    dispatch(logoutAction())
+    navigate("/signin")
+  }
 
+  const handleBackToList = () => {
+    setShowChatList(true)
+    setCurrentChat(null)
+  }
 
-
-
-  // Effect to check if the user is authenticated
   useEffect(() => {
     if (!auth.reqUser) {
-      navigate("/signin");
+      navigate("/signin")
     }
-  }, [auth.reqUser]);
+  }, [auth.reqUser])
+
   return (
-
-    <div className="relative">
-      <div className="w-[100vw] py-14 bg-[#00a884]">
-        <div className="flex bg-[#f0f2f5] h-[90vh] absolute top-[5vh] left-[2vw] w-[96vw]">
-          <div className="left w-[30%] h-full bg-[#e8e9ec]">
-            {isProfile && (
-              <div className="w-full h-full">
-                <Profile handleCloseOpenProfile={handleCloseOpenProfile} />
-              </div>
-            )}
-            {isGroup && <CreateGroup setIsGroup={setIsGroup} />}
-            {!isProfile && !isGroup && (
-              <div className="w-full">
-                <ProfileSection
-                  auth={auth}
-                  isProfile={isProfile}
-                  isGroup={isGroup}
-                  handleNavigate={handleNavigate}
-                  handleClick={handleClick}
-                  handleCreateGroup={handleCreateGroup}
-                  handleLogout={handleLogout}
-                  handleClose={handleClose}
-                  open={open}
-                  anchorEl={anchorEl}
-                />
-                <SearchBar
-                  querys={querys}
-                  setQuerys={setQuerys}
-                  handleSearch={handleSearch}
-                />
-                <ChatList
-                  querys={querys}
-                  auth={auth}
-                  chat={chat}
-                  lastMessages={lastMessages} // Pasa el estado actualizado
-                  handleClickOnChatCard={handleClickOnChatCard}
-                  handleCurrentChat={handleCurrentChat}
-                />
-
-              </div>
-            )}
-          </div>
-          {/* Default WhatsApp Page */}
-          {!currentChat?.id && (
-            <div className="w-[70%] flex flex-col items-center justify-center h-full">
-              <div className="max-w-[70%] text-center">
-                <img
-                  className="ml-11 lg:w-[75%] "
-                  src="https://cdn.pixabay.com/photo/2015/08/03/13/58/whatsapp-873316_640.png"
-                  alt="whatsapp-icon"
-                />
-                <h1 className="text-4xl text-gray-600">WhatsApp Web</h1>
-                <p className="my-9">
-                  Send and receive messages with WhatsApp and save time.
-                </p>
-              </div>
+    <div className="relative h-screen w-screen overflow-hidden bg-blue-50">
+      <div className="w-full h-full py-4 md:py-14 bg-blue-600">
+        <div className="flex flex-col md:flex-row bg-white h-full md:h-[90vh] absolute inset-0 md:top-[5vh] md:left-[2vw] md:w-[96vw] rounded-lg shadow-lg">
+          {(!isMobileView || (isMobileView && showChatList)) && (
+            <div className="left w-full md:w-[30%] h-full bg-blue-100 overflow-y-auto rounded-l-lg">
+              {isProfile && (
+                <div className="w-full h-full">
+                  <Profile handleCloseOpenProfile={handleCloseOpenProfile} />
+                </div>
+              )}
+              {isGroup && <CreateGroup setIsGroup={setIsGroup} handleCloseOpenProfile={handleCloseOpenProfile}/>}
+              {!isProfile && !isGroup && (
+                <div className="w-full">
+                  <ProfileSection
+                    auth={auth}
+                    isProfile={isProfile}
+                    isGroup={isGroup}
+                    handleNavigate={handleNavigate}
+                    handleClick={handleClick}
+                    handleCreateGroup={handleCreateGroup}
+                    handleLogout={handleLogout}
+                    handleClose={handleClose}
+                    open={open}
+                    anchorEl={anchorEl}
+                  />
+                  <SearchBar querys={querys} setQuerys={setQuerys} handleSearch={handleSearch} />
+                  <ChatList
+                    querys={querys}
+                    auth={auth}
+                    chat={chat}
+                    lastMessages={lastMessages}
+                    handleClickOnChatCard={handleClickOnChatCard}
+                    handleCurrentChat={handleCurrentChat}
+                  />
+                </div>
+              )}
             </div>
           )}
-
-          {/* Message Section */}
-          {currentChat?.id && (
-            <div className="w-[70%] relative  bg-blue-200">
-              <div className="header absolute top-0 w-full bg-[#f0f2f5]">
-                <div className="flex justify-between">
-                  <div className="py-3 space-x-4 flex items-center px-3">
+          {(!isMobileView || (isMobileView && !showChatList)) && (
+            <div className="w-full md:w-[70%] h-full flex flex-col bg-white relative rounded-r-lg">
+              {!currentChat?.id ? (
+                <div className="flex flex-col items-center justify-center h-full bg-blue-50">
+                  <div className="max-w-[70%] text-center">
                     <img
-                      className="w-10 h-10 rounded-full"
-                      src={
-                        currentChat.group
-                          ? currentChat.chat_image ||
-                          "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
-                          : auth.reqUser?.id !== currentChat.users[0]?.id
-                            ? currentChat.users[0]?.profile ||
-                            "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
-                            : currentChat.users[1]?.profile ||
-                            "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
-                      }
-                      alt="profile"
+                      className="ml-11 w-1/2 md:w-[75%] mx-auto"
+                      src="https://cdn.pixabay.com/photo/2015/08/03/13/58/whatsapp-873316_640.png"
+                      alt="whatsapp-icon"
                     />
-                    <p>
-                      {currentChat.group
-                        ? currentChat.chatName
-                        : auth.reqUser?.id !== currentChat.users[0]?.id
-                          ? currentChat.users[0].name
-                          : currentChat.users[1].name}
+                    <h1 className="text-2xl md:text-4xl text-blue-600">WhatsApp Web</h1>
+                    <p className="my-4 md:my-9 text-sm md:text-base text-blue-800">
+                      Send and receive messages with WhatsApp and save time.
                     </p>
                   </div>
-
                 </div>
-              </div>
-
-              {/* Message Section */}
-              <div className="px-10 h-[85vh] overflow-y-scroll pb-10" ref={messageContainerRef}>
-                <div className="space-y-1 w-full flex flex-col justify-center items-end  mt-20 py-2">
-                  {messages?.length > 0 &&
-                    messages?.map((item, i) => (
-                      <MessageCard
-                        key={i}
-                        isReqUserMessage={item?.user?.id !== auth?.reqUser?.id}
-                        content={item.content}
-                        timestamp={item.timestamp}
-                        profilePic={item?.user?.profile || "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="}
+              ) : (
+                <>
+                  <div className="header bg-blue-500 p-2 md:p-3 flex items-center rounded-tr-lg">
+                    {isMobileView && (
+                      <button onClick={handleBackToList} className="mr-2 text-white">
+                        <BsArrowLeft size={24} />
+                      </button>
+                    )}
+                    <div className="flex items-center space-x-2 md:space-x-4">
+                      <img
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white"
+                        src={
+                          currentChat.group
+                            ? currentChat.chat_image ||
+                              "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
+                            : auth.reqUser?.id !== currentChat.users[0]?.id
+                              ? currentChat.users[0]?.profile ||
+                                "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
+                              : currentChat.users[1]?.profile ||
+                                "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
+                        }
+                        alt="profile"
                       />
-                    ))}
-                </div>
-              </div>
-
-              {/* Footer Section */}
-              <div className="footer bg-[#f0f2f5] absolute bottom-0 w-full py-3 text-2xl">
-                <div className="flex justify-between items-center px-5 relative">
-                  <input
-                    className="py-2 outline-none border-none bg-white pl-4 rounded-md w-[85%]"
-                    type="text"
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Type message"
-                    value={content}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCreateNewMessage();
-                        setContent("");
-                      }
-                    }}
-                  />
-                  {/* Icono de enviar con onClick */}
-                  <AiOutlineSend
-                    className="cursor-pointer"
-                    onClick={() => {
-                      handleCreateNewMessage(); // Enviar mensaje al hacer clic
-                      setContent(""); // Limpiar el cuadro de texto después de enviar
-                    }}
-                  />
-                </div>
-              </div>
+                      <p className="text-sm md:text-base font-semibold text-white">
+                        {currentChat.group
+                          ? currentChat.chatName
+                          : auth.reqUser?.id !== currentChat.users[0]?.id
+                            ? currentChat.users[0].name
+                            : currentChat.users[1].name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex-grow overflow-y-auto px-2 md:px-10 bg-blue-50" ref={messageContainerRef}>
+                    <div className="space-y-1 w-full flex flex-col justify-end min-h-full py-2">
+                      {messages?.length > 0 &&
+                        messages?.map((item, i) => (
+                          <MessageCard
+                            key={i}
+                            isReqUserMessage={item?.user?.id !== auth?.reqUser?.id}
+                            content={item.content}
+                            timestamp={item.timestamp}
+                            profilePic={
+                              item?.user?.profile ||
+                              "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="
+                            }
+                          />
+                        ))}
+                    </div>
+                  </div>
+                  <div className="footer bg-blue-100 py-2 md:py-3 rounded-br-lg">
+                    <div className="flex justify-between items-center px-2 md:px-5 relative">
+                      <input
+                        className="py-2 outline-none border-none bg-white pl-2 md:pl-4 rounded-md w-[85%] text-sm md:text-base"
+                        type="text"
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Type message"
+                        value={content}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            handleCreateNewMessage()
+                            setContent("")
+                          }
+                        }}
+                      />
+                      <AiOutlineSend
+                        className="cursor-pointer text-blue-600 hover:text-blue-800"
+                        onClick={() => {
+                          handleCreateNewMessage()
+                          setContent("")
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default HomePage;
+export default HomePage
+

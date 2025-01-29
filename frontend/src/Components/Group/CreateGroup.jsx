@@ -6,7 +6,7 @@ import NewGroup from "./NewGroup";
 import { useDispatch, useSelector } from "react-redux";
 import { searchUser } from "../../Redux/Auth/Action";
 
-const CreateGroup = ({ setIsGroup }) => {
+const CreateGroup = ({ setIsGroup, handleCloseOpenProfile }) => {
   // State to manage whether to create a new group or not
   const [newGroup, setNewGroup] = useState(false);
   // State to store the selected group members
@@ -36,7 +36,7 @@ const CreateGroup = ({ setIsGroup }) => {
         <div>
           {/* Header */}
           <div className="flex items-center space-x-10 bg-[#069b60] text-white pt-16 px-10 pb-5">
-            <BsArrowLeft className="cursor-pointer text-2xl font-bold" />
+            <BsArrowLeft className="cursor-pointer text-2xl font-bold" onClick={handleCloseOpenProfile}/>
             <p className="text-xl font-semibold">Add Participants</p>
           </div>
 
