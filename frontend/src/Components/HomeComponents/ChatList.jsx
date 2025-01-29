@@ -31,10 +31,10 @@ const ChatList = ({
           </div>
         ))}
 
-      {/* Muestra los chats existentes */}
       {chat?.chats?.length > 0 && !querys && chat?.chats?.map((item, index) => {
         console.log("Last message for chat:", item.id, lastMessages[item.id]);
-        
+        console.log("Group or chat data:", item);
+
         return (
           <div key={index} onClick={() => { handleCurrentChat(item); console.log("the item is ", item); }}>
             <hr />
@@ -49,9 +49,9 @@ const ChatList = ({
               }
               userImg={
                 item.group
-                  ? item.profile // Si es un grupo, usa la imagen del grupo
-                  : item.users.find(user => user.id !== auth.reqUser?.id)?.profile || // Si es chat individual, usa la imagen del otro usuario
-                    "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0=" // Imagen predeterminada
+                  ? item.chatImage // Aquí asignamos la imagen del grupo, no la de perfil
+                  : item.users.find(user => user.id !== auth.reqUser?.id)?.profile ||
+                  "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0=" // Imagen predeterminada
               }
               lastMessage={{
                 content: lastMessages[item.id]?.content || "Iniciar la conversación",
@@ -63,6 +63,7 @@ const ChatList = ({
           </div>
         );
       })}
+
     </div>
   );
 };
