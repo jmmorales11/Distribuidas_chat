@@ -15,6 +15,7 @@ import ChatList from "./HomeComponents/ChatList"
 import MessageCard from "./MessageCard/MessageCard"
 import { AiOutlineSearch, AiOutlineSend } from "react-icons/ai"
 import { BsMicFill, BsThreeDotsVertical, BsArrowLeft } from "react-icons/bs"
+const backgroundImage = require('./background.jpg');
 
 function HomePage() {
   const [querys, setQuerys] = useState("")
@@ -290,7 +291,7 @@ function HomePage() {
                   <Profile handleCloseOpenProfile={handleCloseOpenProfile} />
                 </div>
               )}
-              {isGroup && <CreateGroup setIsGroup={setIsGroup} handleCloseOpenProfile={handleCloseOpenProfile}/>}
+              {isGroup  && <CreateGroup setIsGroup={setIsGroup}/>}
               {!isProfile && !isGroup && (
                 <div className="w-full">
                   <ProfileSection
@@ -321,19 +322,20 @@ function HomePage() {
           {(!isMobileView || (isMobileView && !showChatList)) && (
             <div className="w-full md:w-[70%] h-full flex flex-col bg-white relative rounded-r-lg">
               {!currentChat?.id ? (
-                <div className="flex flex-col items-center justify-center h-full bg-blue-50">
-                  <div className="max-w-[70%] text-center">
-                    <img
-                      className="ml-11 w-1/2 md:w-[75%] mx-auto"
-                      src="https://cdn.pixabay.com/photo/2015/08/03/13/58/whatsapp-873316_640.png"
-                      alt="whatsapp-icon"
-                    />
-                    <h1 className="text-2xl md:text-4xl text-blue-600">WhatsApp Web</h1>
-                    <p className="my-4 md:my-9 text-sm md:text-base text-blue-800">
-                      Send and receive messages with WhatsApp and save time.
-                    </p>
-                  </div>
+                <div className="flex flex-col items-center justify-center h-full bg-blue-50 relative">
+                <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${backgroundImage})` }}
+                  ></div>
+                <div className="relative z-10 max-w-[70%] text-center bg-white bg-opacity-80 p-8 rounded-lg shadow-lg">
+                  <h1 className="text-2xl md:text-4xl text-black-600 font-bold mb-4">
+                    Bienvenido a nuestra aplicación de chat
+                  </h1>
+                  <p className="text-sm md:text-base text-black-800">
+                    Selecciona un chat para comenzar a enviar mensajes o inicia una nueva conversación.
+                  </p>
                 </div>
+              </div>
               ) : (
                 <>
                   <div className="header bg-blue-500 p-2 md:p-3 flex items-center rounded-tr-lg">

@@ -20,7 +20,7 @@ const ChatList = ({
             <hr />
             <ChatCard
               name={item.name}
-              userImg={item.profile || "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0="}
+              userImg={item.profile}
               lastMessage={{
                 content: lastMessages[item.id]?.content || "Iniciar la conversación",
                 timestamp: lastMessages[item.id]?.timestamp || "",
@@ -48,9 +48,10 @@ const ChatList = ({
                     : item.users[1]?.name
               }
               userImg={
-                item.profile || // Aquí se usa la imagen de perfil del chat
-                (item.users[0]?.profile || item.users[1]?.profile) || // Aquí se verifica si los usuarios tienen imágenes
-                "https://media.istockphoto.com/id/1455296779/photo/smiling-businesspeople-standing-arm-in-arm-in-an-office-hall.webp?b=1&s=170667a&w=0&k=20&c=0bdu3-mVcOw6FN_vIkwTx4pCE6jgL7Jy29bBWZhoiik=" // Imagen predeterminada
+                item.group
+                  ? item.profile // Si es un grupo, usa la imagen del grupo
+                  : item.users.find(user => user.id !== auth.reqUser?.id)?.profile || // Si es chat individual, usa la imagen del otro usuario
+                    "https://media.istockphoto.com/id/521977679/photo/silhouette-of-adult-woman.webp?b=1&s=170667a&w=0&k=20&c=wpJ0QJYXdbLx24H5LK08xSgiQ3zNkCAD2W3F74qlUL0=" // Imagen predeterminada
               }
               lastMessage={{
                 content: lastMessages[item.id]?.content || "Iniciar la conversación",
