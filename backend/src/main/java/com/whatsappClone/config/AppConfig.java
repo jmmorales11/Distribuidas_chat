@@ -37,13 +37,13 @@ public class AppConfig {
                         // Permitir las direcciones IP necesarias
                         cfg.setAllowedOrigins(Arrays.asList(
                                 "http://localhost:3000", // Para desarrollo local
-                                "http://192.168.1.15:3000" // Cambia esto por la IP de tu computadora en tu red local
+                                "http://192.168.100.127:3000" // Cambia esto por la IP de tu computadora en tu red local
                         ));
 
                         // También puedes usar patrones
                         cfg.setAllowedOriginPatterns(Arrays.asList(
                                 "http://localhost:3000",
-                                "http://192.168.1.15:3000" // Patrones para más flexibilidad
+                                "http://192.168.100.127:3000" // Patrones para más flexibilidad
                         ));
 
                         cfg.setAllowedMethods(Collections.singletonList("*"));

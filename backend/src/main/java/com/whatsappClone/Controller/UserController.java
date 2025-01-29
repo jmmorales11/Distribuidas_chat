@@ -62,7 +62,7 @@ public class UserController {
         User user = this.userService.findUserById(userId);
         user.setStatus(true); // Establecer el estado como true
         this.userService.updateUser(user.getId(), new UpdateUserRequest()); // Actualiza el usuario
-
+        System.out.println("Connected User: " + user.getName());
         ApiResponse response = new ApiResponse();
         response.setMessage("User status activated successfully. New status: " + user.getStatus());
         response.setStatus(true);
@@ -77,7 +77,7 @@ public class UserController {
         User user = this.userService.findUserById(userId);
         user.setStatus(false); // Establecer el estado como false
         this.userService.updateUser(user.getId(), new UpdateUserRequest()); // Actualiza el usuario
-
+        System.out.println("User logged out: " + user.getName());
         ApiResponse response = new ApiResponse();
         response.setMessage("User status deactivated successfully. New status: " + user.getStatus());
         response.setStatus(true);
